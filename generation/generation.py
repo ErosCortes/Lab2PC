@@ -1,0 +1,143 @@
+"""Generación de hosts, logs y mantenimientos.
+
+Reglas:
+- hosts: hostname codifica país y entorno. Ej: LPIRL001
+- logs: id_log,id_server,timestamp,request_type,response_time_ms,status_code,user
+- maintenance: id_maintenance,id_server,date,type,duration_min,technician,notes
+
+Las notas de mantenimiento intentan usar 'ollama' si está instalado; si no, se generan frases simples.
+"""
+import pandas as pd
+import numpy as np
+import random
+import datetime
+from pathlib import Path
+from config.config import NUM_HOSTS, RANDOM_SEED
+
+random.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+
+COUNTRIES = ["Ireland", "Italy", "Germany", "Chile", "Spain", "USA"]
+OSS = ["Linux", "AIX", "Solaris", "Windows"]
+ENV = ["Production", "Testing", "Development"]
+REQUEST_TYPES = ["GET", "POST", "PUT", "DELETE"]
+STATUS_CODES = [200, 201, 400, 401, 403, 404, 500]
+MAINT_TYPES = ["Patch", "Incident", "Upgrade", "Security", "Network"]
+
+def gen_hosts(n=NUM_HOSTS):
+    hosts = []
+    for i in range(1, n + 1):
+        country = random.choice(COUNTRIES)
+        osys = random.choice(OSS)
+        env = random.choices(ENV, weights=[0.5, 0.25, 0.25])[0]
+        node = f"{i:03d}"
+        type_letter = 'L' if osys == 'Linux' else 'S'
+        env_letter = {'Production': 'P', 'Testing': 'T', 'Development': 'D'}[env]
+        country_code = country[:3].upper()
+        hostname = f"{type_letter}{env_letter}{country_code}{node}"
+        hosts.append({
+            "id": i,
+            "hostname": hostname,
+            "os": osys,
+            "environment": env,
+            "country": country,
+            "node": node
+        })
+    return pd.DataFrame(hosts)
+
+def gen_logs(hosts_df, per_host_mean=200):
+    logs = []
+    id_log = 0
+    start = datetime.datetime(2024, 1, 1, 0, 0, 0)
+    end = datetime.datetime(2025, 10, 1, 0, 0, 0)
+    for _, row in hosts_df.iterrows():
+        # número de logs por host (distribución alrededor de per_host_mean)
+        n = max(10, int(abs(int(random.gauss(per_host_mean, per_host_mean * 0.5)))))
+        for _ in range(n):
+            ts = start + datetime.timedelta(seconds=random.randint(0, int((end - start).total_seconds())))
+            req = random.choices(REQUEST_TYPES, weights=[0.7, 0.15, 0.1, 0.05])[0]
+            base = 100 if row['environment'] == 'Production' else 200
+            # respuesta: combinación exponencial + ruido
+            resp = max(1, int(np.random.exponential(scale=base) + random.gauss(0, 50)))
+            status = random.choices(STATUS_CODES, weights=[0.7, 0.05, 0.03, 0.03, 0.02, 0.15, 0.02])[0]
+            user = f"user{random.randint(1, 999):03d}"
+            logs.append({
+                "id_log": id_log,
+                "id_server": int(row['id']),
+                "timestamp": ts.strftime('%Y-%m-%d %H:%M:%S'),
+                "request_type": req,
+                "response_time_ms": int(resp),
+                "status_code": int(status),
+                "user": user
+            })
+            id_log += 1
+    return pd.DataFrame(logs)
+
+def generate_note_with_ollama_stub():
+    # Intentamos usar ollama si está disponible; si no, fallback a una frase simple.
+    try:
+        import ollama
+        response = ollama.chat(model='phi', messages=[{
+            'role': 'user',
+            'content': (
+                "Generate exactly short maintenance notes. "
+                "Each note must be one sentence, under 12 words. "
+                "No numbering or extra text. Example: 'Server rebooted successfully.'"
+            )
+        }])
+        content = response.get('message', {}).get('content', '')
+        # si vienen varias líneas, tomar la primera
+        note = content.strip().split('\n')[0]
+        return note[:200]
+    except Exception:
+        opts = [
+            "Server rebooted successfully.",
+            "Applied security patch and verified.",
+            "Replaced faulty NIC and tested connectivity.",
+            "Updated TLS certificates.",
+            "Performed kernel update and rebooted.",
+            "Adjusted firewall rules.",
+            "Checked disk health; replaced failing disk.",
+            "Database service restarted after crash."
+        ]
+        return random.choice(opts)
+
+def gen_maintenance(hosts_df, mean_per_host=3):
+    maint = []
+    idm = 1
+    start = datetime.datetime(2024, 1, 1)
+    end = datetime.datetime(2025, 10, 1)
+    # usaremos poisson de numpy para counts
+    for _, row in hosts_df.iterrows():
+        n = int(np.random.poisson(lam=mean_per_host))
+        n = max(0, n)
+        # si cae 0, permitimos algunos registros (aleatorio)
+        if n == 0:
+            n = random.randint(0, 3)
+        for _ in range(n):
+            date = start + datetime.timedelta(seconds=random.randint(0, int((end - start).total_seconds())))
+            mtype = random.choice(MAINT_TYPES)
+            duration = random.randint(5, 420)
+            tech = f"tech{random.randint(1, 50):03d}"
+            notes = generate_note_with_ollama_stub()
+            maint.append({
+                "id_maintenance": idm,
+                "id_server": int(row['id']),
+                "date": date.strftime('%Y-%m-%d %H:%M:%S'),
+                "type": mtype,
+                "duration_min": int(duration),
+                "technician": tech,
+                "notes": notes
+            })
+            idm += 1
+    return pd.DataFrame(maint)
+
+if __name__ == '__main__':
+    Path('data').mkdir(exist_ok=True)
+    hosts = gen_hosts()
+    logs = gen_logs(hosts)
+    maint = gen_maintenance(hosts)
+    hosts.to_csv('data/hosts.csv', index=False)
+    logs.to_csv('data/logs.csv', index=False)
+    maint.to_csv('data/maintenance.csv', index=False)
+    print('Generados hosts, logs y maintenance en data/')
