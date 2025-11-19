@@ -16,25 +16,25 @@ CREATE TABLE IF NOT EXISTS hosts (
 );
 CREATE TABLE IF NOT EXISTS logs (
     id_log INTEGER PRIMARY KEY,
-    id_server INTEGER NOT NULL,
+    id_host INTEGER NOT NULL,
     timestamp TEXT,
     request_type TEXT,
     response_time_ms INTEGER,
     status_code INTEGER,
     user TEXT,
-    FOREIGN KEY (id_server) REFERENCES hosts(id)
+    FOREIGN KEY (id_host) REFERENCES hosts(id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
 CREATE TABLE IF NOT EXISTS maintenance (
     id_maintenance INTEGER PRIMARY KEY,
-    id_server INTEGER NOT NULL,
+    id_host INTEGER NOT NULL,
     date TEXT,
     type TEXT,
     duration_min INTEGER,
     technician TEXT,
     notes TEXT,
-    FOREIGN KEY (id_server) REFERENCES hosts(id)
+    FOREIGN KEY (id_host) REFERENCES hosts(id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );

@@ -30,7 +30,7 @@ def gen_logs(hosts_df, per_host_mean=200):
     id_log = 0
     start = datetime.datetime(2024, 1, 1, 0, 0, 0)
     end = datetime.datetime(2025, 10, 1, 0, 0, 0)
-    for _, row in hosts_df.iterrows():
+    for idx, row in hosts_df.iterrows():
         # número de logs por host (distribución alrededor de per_host_mean)
         n = max(10, int(abs(int(random.gauss(per_host_mean, per_host_mean * 0.5)))))
         for _ in range(n):
@@ -43,7 +43,7 @@ def gen_logs(hosts_df, per_host_mean=200):
             user = f"user{random.randint(1, 999):03d}"
             logs.append({
                 "id_log": id_log,
-                "id_host": str(row['hostname']),
+                "id_host": int(idx),
                 "timestamp": ts.strftime('%Y-%m-%d %H:%M:%S'),
                 "request_type": req,
                 "response_time_ms": int(resp),
@@ -84,7 +84,7 @@ def generate_note_with_ollama_stub():
 
 def gen_maintenance(hosts_df, mean_per_host=3):
     maint = []
-    idm = 1
+    idm = 0
     start = datetime.datetime(2024, 1, 1)
     end = datetime.datetime(2025, 10, 1)
     # usaremos poisson de numpy para counts
@@ -94,7 +94,7 @@ def gen_maintenance(hosts_df, mean_per_host=3):
         # si cae 0, permitimos algunos registros (aleatorio)
         if n == 0:
             n = random.randint(0, 3)
-        for _ in range(n):
+        for idx in range(n):
             date = start + datetime.timedelta(seconds=random.randint(0, int((end - start).total_seconds())))
             mtype = random.choice(MAINT_TYPES)
             duration = random.randint(5, 420)
@@ -102,7 +102,7 @@ def gen_maintenance(hosts_df, mean_per_host=3):
             notes = generate_note_with_ollama_stub()
             maint.append({
                 "id_maintenance": idm,
-                "id_host": str(row['hostname']),
+                "id_host": int(idx),
                 "date": date.strftime('%Y-%m-%d %H:%M:%S'),
                 "type": mtype,
                 "duration_min": int(duration),
