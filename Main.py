@@ -6,8 +6,11 @@ import os
 import generation.carga_de_datos
 def run_all():
     print('Generando datos...')
+    #carga los datos desde el csv otorgado como dataset
     hosts = generation.carga_de_datos.cargar_hosts()
+    #crea los logs en base a los hosts para mantener coherencia
     logs = gen_logs(hosts)
+    #crea los mantenimientos en base a los hosts para mantener coherencia
     maint = gen_maintenance(hosts)
 
     os.makedirs('data', exist_ok=True)
