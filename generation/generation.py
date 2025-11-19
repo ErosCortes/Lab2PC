@@ -43,7 +43,7 @@ def gen_logs(hosts_df, per_host_mean=200):
             user = f"user{random.randint(1, 999):03d}"
             logs.append({
                 "id_log": id_log,
-                "id_server": int(row['id']),
+                "id_host": str(row['hostname']),
                 "timestamp": ts.strftime('%Y-%m-%d %H:%M:%S'),
                 "request_type": req,
                 "response_time_ms": int(resp),
@@ -102,7 +102,7 @@ def gen_maintenance(hosts_df, mean_per_host=3):
             notes = generate_note_with_ollama_stub()
             maint.append({
                 "id_maintenance": idm,
-                "id_server": int(row['id']),
+                "id_host": str(row['hostname']),
                 "date": date.strftime('%Y-%m-%d %H:%M:%S'),
                 "type": mtype,
                 "duration_min": int(duration),

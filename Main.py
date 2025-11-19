@@ -1,17 +1,24 @@
 #commit inicial 
 """Script principal para generar, almacenar y ejecutar reportes."""
-from generation.generation import gen_hosts, gen_logs, gen_maintenance
+from generation.generation import gen_logs, gen_maintenance
 from storage.storage import create_db, insert_from_csv
 import os
-import generation.carga_de_datos
+from generation.carga_de_datos import cargar_hosts
 def run_all():
     print('Generando datos...')
+
     #carga los datos desde el csv otorgado como dataset
-    hosts = generation.carga_de_datos.cargar_hosts()
+    hosts = cargar_hosts("data/hosts.csv")
+    print(hosts)
+    
+
     #crea los logs en base a los hosts para mantener coherencia
     logs = gen_logs(hosts)
+    print(logs)
+
     #crea los mantenimientos en base a los hosts para mantener coherencia
     maint = gen_maintenance(hosts)
+    print(maint)
 
     os.makedirs('data', exist_ok=True)
     hosts.to_csv('data/hosts.csv', index=False)
