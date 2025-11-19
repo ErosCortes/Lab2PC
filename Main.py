@@ -3,10 +3,10 @@
 from generation.generation import gen_hosts, gen_logs, gen_maintenance
 from storage.storage import create_db, insert_from_csv
 import os
-
+import generation.carga_de_datos
 def run_all():
     print('Generando datos...')
-    hosts = gen_hosts()
+    hosts = generation.carga_de_datos.cargar_hosts()
     logs = gen_logs(hosts)
     maint = gen_maintenance(hosts)
 

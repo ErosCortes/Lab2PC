@@ -13,7 +13,6 @@ import random
 import datetime
 from pathlib import Path
 from config.config import NUM_HOSTS, RANDOM_SEED
-import carga_de_datos
 
 random.seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
@@ -25,7 +24,6 @@ REQUEST_TYPES = ["GET", "POST", "PUT", "DELETE"]
 STATUS_CODES = [200, 201, 400, 401, 403, 404, 500]
 MAINT_TYPES = ["Patch", "Incident", "Upgrade", "Security", "Network"]
 
-hostsDf = carga_de_datos()
 
 def gen_logs(hosts_df, per_host_mean=200):
     logs = []
