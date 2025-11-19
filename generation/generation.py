@@ -13,6 +13,7 @@ import random
 import datetime
 from pathlib import Path
 from config.config import NUM_HOSTS, RANDOM_SEED
+import carga_de_datos
 
 random.seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
@@ -24,26 +25,7 @@ REQUEST_TYPES = ["GET", "POST", "PUT", "DELETE"]
 STATUS_CODES = [200, 201, 400, 401, 403, 404, 500]
 MAINT_TYPES = ["Patch", "Incident", "Upgrade", "Security", "Network"]
 
-def gen_hosts(n=NUM_HOSTS):
-    hosts = []
-    for i in range(1, n + 1):
-        country = random.choice(COUNTRIES)
-        osys = random.choice(OSS)
-        env = random.choices(ENV, weights=[0.5, 0.25, 0.25])[0]
-        node = f"{i:03d}"
-        type_letter = 'L' if osys == 'Linux' else 'S'
-        env_letter = {'Production': 'P', 'Testing': 'T', 'Development': 'D'}[env]
-        country_code = country[:3].upper()
-        hostname = f"{type_letter}{env_letter}{country_code}{node}"
-        hosts.append({
-            "id": i,
-            "hostname": hostname,
-            "os": osys,
-            "environment": env,
-            "country": country,
-            "node": node
-        })
-    return pd.DataFrame(hosts)
+hostsDf = carga_de_datos()
 
 def gen_logs(hosts_df, per_host_mean=200):
     logs = []
