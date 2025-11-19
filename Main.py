@@ -9,16 +9,13 @@ def run_all():
 
     #carga los datos desde el csv otorgado como dataset
     hosts = cargar_hosts("data/hosts.csv")
-    print(hosts)
     
 
     #crea los logs en base a los hosts para mantener coherencia
     logs = gen_logs(hosts)
-    print(logs)
 
     #crea los mantenimientos en base a los hosts para mantener coherencia
     maint = gen_maintenance(hosts)
-    print(maint)
 
     os.makedirs('data', exist_ok=True)
     hosts.to_csv('data/hosts.csv', index=False)

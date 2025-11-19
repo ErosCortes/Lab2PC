@@ -55,9 +55,9 @@ def run():
         print('wordcloud no disponible, guardado data/plots/notes_wordlist.txt')
 
     # 4. Relación duración mantenimiento vs tiempos de respuesta por país (scatter agregado)
-    merged = maint.merge(hosts[['id', 'country']], left_on='id_server', right_on='id', how='left')
+    merged = maint.merge(hosts[['id', 'country']], left_on='id_host', right_on='id', how='left')
     avg_maint = merged.groupby('country')['duration_min'].mean().rename('avg_maint').reset_index()
-    logs2 = logs.merge(hosts[['id', 'country']], left_on='id_server', right_on='id', how='left')
+    logs2 = logs.merge(hosts[['id', 'country']], left_on='id_host', right_on='id', how='left')
     avg_resp = logs2.groupby('country')['response_time_ms'].mean().rename('avg_resp').reset_index()
     agg = avg_maint.merge(avg_resp, on='country', how='inner')
     plt.figure()

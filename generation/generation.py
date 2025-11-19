@@ -2,8 +2,8 @@
 
 Reglas:
 - hosts: hostname codifica país y entorno. Ej: LPIRL001
-- logs: id_log,id_server,timestamp,request_type,response_time_ms,status_code,user
-- maintenance: id_maintenance,id_server,date,type,duration_min,technician,notes
+- logs: id_log,id_host,timestamp,request_type,response_time_ms,status_code,user
+- maintenance: id_maintenance,id_host,date,type,duration_min,technician,notes
 
 Las notas de mantenimiento intentan usar 'ollama' si está instalado; si no, se generan frases simples.
 """
@@ -27,7 +27,6 @@ MAINT_TYPES = ["Patch", "Incident", "Upgrade", "Security", "Network"]
 
 def gen_logs(hosts_df, per_host_mean=200):
     logs = []
-    id_log = 0
     start = datetime.datetime(2024, 1, 1, 0, 0, 0)
     end = datetime.datetime(2025, 10, 1, 0, 0, 0)
     for idx, row in hosts_df.iterrows():
@@ -42,15 +41,13 @@ def gen_logs(hosts_df, per_host_mean=200):
             status = random.choices(STATUS_CODES, weights=[0.7, 0.05, 0.03, 0.03, 0.02, 0.15, 0.02])[0]
             user = f"user{random.randint(1, 999):03d}"
             logs.append({
-                "id_log": id_log,
-                "id_host": int(idx),
+                "id_host": int(idx) +1,
                 "timestamp": ts.strftime('%Y-%m-%d %H:%M:%S'),
                 "request_type": req,
                 "response_time_ms": int(resp),
                 "status_code": int(status),
                 "user": user
             })
-            id_log += 1
     return pd.DataFrame(logs)
 
 def generate_note_with_ollama_stub():
@@ -84,40 +81,31 @@ def generate_note_with_ollama_stub():
 
 def gen_maintenance(hosts_df, mean_per_host=3):
     maint = []
-    idm = 0
     start = datetime.datetime(2024, 1, 1)
     end = datetime.datetime(2025, 10, 1)
-    # usaremos poisson de numpy para counts
-    for _, row in hosts_df.iterrows():
+
+    for idx_host, row in hosts_df.iterrows():
         n = int(np.random.poisson(lam=mean_per_host))
         n = max(0, n)
-        # si cae 0, permitimos algunos registros (aleatorio)
         if n == 0:
             n = random.randint(0, 3)
-        for idx in range(n):
+
+        for _ in range(n):
             date = start + datetime.timedelta(seconds=random.randint(0, int((end - start).total_seconds())))
             mtype = random.choice(MAINT_TYPES)
             duration = random.randint(5, 420)
             tech = f"tech{random.randint(1, 50):03d}"
             notes = generate_note_with_ollama_stub()
+
             maint.append({
-                "id_maintenance": idm,
-                "id_host": int(idx),
+                "id_host": int(idx_host) + 1,  
                 "date": date.strftime('%Y-%m-%d %H:%M:%S'),
                 "type": mtype,
                 "duration_min": int(duration),
                 "technician": tech,
                 "notes": notes
             })
-            idm += 1
     return pd.DataFrame(maint)
 
-if __name__ == '__main__':
-    Path('data').mkdir(exist_ok=True)
-    hosts = gen_hosts()
-    logs = gen_logs(hosts)
-    maint = gen_maintenance(hosts)
-    hosts.to_csv('data/hosts.csv', index=False)
-    logs.to_csv('data/logs.csv', index=False)
-    maint.to_csv('data/maintenance.csv', index=False)
-    print('Generados hosts, logs y maintenance en data/')
+
+

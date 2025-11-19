@@ -57,6 +57,7 @@ def insert_from_csv(db_path=DB_PATH):
         path = f'data/{name}.csv'
         try:
             df = pd.read_csv(path)
+            print(df)
             # Si la tabla está vacía insertamos; si ya tiene datos, append (avoid duplicates is left to user)
             df.to_sql(name, conn, if_exists='append', index=False)
             print(f'Insertado {name} -> {len(df)} filas')
