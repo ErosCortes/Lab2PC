@@ -14,7 +14,7 @@ def run():
 
     os.makedirs('data/plots', exist_ok=True)
 
-    # 1. Conteo de servidores por país (interpreto esto como "el siguiente gráfico")
+ 
     counts = hosts['country'].value_counts()
     plt.figure()
     counts.plot(kind='bar')
@@ -25,12 +25,12 @@ def run():
     plt.close()
     print('Guardado: data/plots/servers_by_country.png')
 
-    # 2. Scatter: hora del día vs response time
+    
     ts = logs['timestamp'].dt
     logs['hour_continuous'] = ts.hour + ts.minute / 60 + ts.second / 3600
     
     plt.figure(figsize=(10,5))
-    plt.scatter(logs['hour_continuous'], logs['response_time_ms'], s=2, alpha=0.6) # alpha para ver densidad
+    plt.scatter(logs['hour_continuous'], logs['response_time_ms'], s=2, alpha=0.6) 
     plt.xlabel('Hora del día')
     plt.ylabel('Response time (ms)')
     plt.title('Hora del día vs Tiempo de respuesta')
@@ -41,8 +41,8 @@ def run():
     plt.savefig('data/plots/hour_vs_response.png')
     plt.close()
     print('Guardado: data/plots/hour_vs_response.png')
+
     
-    # 3. Word cloud con notas de mantenimiento (si wordcloud no está, guardamos un txt)
     notes_txt = ' '.join(maint['notes'].fillna('').astype(str).tolist())
     try:
         from wordcloud import WordCloud
@@ -59,7 +59,7 @@ def run():
             f.write(notes_txt)
         print('wordcloud no disponible, guardado data/plots/notes_wordlist.txt')
 
-    # 4. Relación duración mantenimiento vs tiempos de respuesta por país (scatter agregado)
+    
     merged = maint.merge(hosts[['id', 'country']], left_on='id_host', right_on='id', how='left')
     avg_maint = merged.groupby('country')['duration_min'].mean().rename('avg_maint').reset_index()
     logs2 = logs.merge(hosts[['id', 'country']], left_on='id_host', right_on='id', how='left')
@@ -77,7 +77,7 @@ def run():
     plt.close()
     print('Guardado: data/plots/maint_vs_resp_by_country.png')
 
-    # 5. Cómo varía el tiempo de respuesta promedio por mes
+    
     logs['month'] = pd.to_datetime(logs['timestamp']).dt.to_period('M')
     monthly = logs.groupby('month')['response_time_ms'].mean().reset_index()
     plt.figure(figsize=(8,4))

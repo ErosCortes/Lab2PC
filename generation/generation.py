@@ -30,13 +30,13 @@ def gen_logs(hosts_df, per_host_mean=200):
     start = datetime.datetime(2024, 1, 1, 0, 0, 0)
     end = datetime.datetime(2025, 10, 1, 0, 0, 0)
     for idx, row in hosts_df.iterrows():
-        # número de logs por host (distribución alrededor de per_host_mean)
+
         n = max(10, int(abs(int(random.gauss(per_host_mean, per_host_mean * 0.5)))))
         for _ in range(n):
             ts = start + datetime.timedelta(seconds=random.randint(0, int((end - start).total_seconds())))
             req = random.choices(REQUEST_TYPES, weights=[0.7, 0.15, 0.1, 0.05])[0]
             base = 100 if row['environment'] == 'Production' else 200
-            # respuesta: combinación exponencial + ruido
+            
             resp = max(1, int(np.random.exponential(scale=base) + random.gauss(0, 50)))
             status = random.choices(STATUS_CODES, weights=[0.7, 0.05, 0.03, 0.03, 0.02, 0.15, 0.02])[0]
             user = f"user{random.randint(1, 999):03d}"
@@ -51,7 +51,7 @@ def gen_logs(hosts_df, per_host_mean=200):
     return pd.DataFrame(logs)
 
 def generate_note_with_ollama_stub():
-    # Intentamos usar ollama si está disponible; si no, fallback a una frase simple.
+    
     try:
         import ollama
         response = ollama.chat(model='phi', messages=[{
@@ -63,7 +63,7 @@ def generate_note_with_ollama_stub():
             )
         }])
         content = response.get('message', {}).get('content', '')
-        # si vienen varias líneas, tomar la primera
+        
         note = content.strip().split('\n')[0]
         return note[:200]
     except Exception:
