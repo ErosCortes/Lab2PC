@@ -26,17 +26,22 @@ def run():
     print('Guardado: data/plots/servers_by_country.png')
 
     # 2. Scatter: hora del día vs response time
-    logs['hour'] = pd.to_datetime(logs['timestamp']).dt.hour
-    plt.figure(figsize=(8,4))
-    plt.scatter(logs['hour'], logs['response_time_ms'], s=2)
+    ts = logs['timestamp'].dt
+    logs['hour_continuous'] = ts.hour + ts.minute / 60 + ts.second / 3600
+    
+    plt.figure(figsize=(10,5))
+    plt.scatter(logs['hour_continuous'], logs['response_time_ms'], s=2, alpha=0.6) # alpha para ver densidad
     plt.xlabel('Hora del día')
     plt.ylabel('Response time (ms)')
     plt.title('Hora del día vs Tiempo de respuesta')
+    plt.xlim(0, 24) 
+    plt.xticks(range(0, 25, 2)) 
+    plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
     plt.savefig('data/plots/hour_vs_response.png')
     plt.close()
     print('Guardado: data/plots/hour_vs_response.png')
-
+    
     # 3. Word cloud con notas de mantenimiento (si wordcloud no está, guardamos un txt)
     notes_txt = ' '.join(maint['notes'].fillna('').astype(str).tolist())
     try:

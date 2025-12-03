@@ -5,6 +5,11 @@ from storage.storage import create_db, insert_from_csv
 import os
 from generation.carga_de_datos import cargar_hosts
 def run_all():
+    db_path = 'data/infrastructure.db'
+    if os.path.exists(db_path):
+        os.remove(db_path)
+        print(f'Base de datos anterior eliminada en {db_path}')
+
     print('Generando datos...')
 
     #carga los datos desde el csv otorgado como dataset
